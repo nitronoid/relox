@@ -1,0 +1,11 @@
+cc_library(
+    name = "fmt",
+    hdrs = glob([
+        "include/fmt/*.h",
+    ]),
+    strip_include_prefix = "include/",
+    defines = ["FMT_HEADER_ONLY"],
+    visibility = [
+        "//visibility:public",
+    ],
+)

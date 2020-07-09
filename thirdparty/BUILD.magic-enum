@@ -1,0 +1,11 @@
+cc_library(
+    name = "magic-enum",
+    hdrs = [
+        "include/magic_enum.hpp",
+    ],
+    include_prefix = "magic_enum",
+    strip_include_prefix = "include/",
+    visibility = [
+        "//visibility:public",
+    ],
+)

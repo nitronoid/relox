@@ -1,0 +1,12 @@
+cc_library(
+    name = "expected",
+    hdrs = [
+        "include/tl/expected.hpp",
+    ],
+    include_prefix = "tl",
+    strip_include_prefix = "include/tl",
+    visibility = [
+        "//visibility:public",
+    ],
+)
+

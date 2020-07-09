@@ -1,0 +1,11 @@
+cc_library(
+    name = "ctre",
+    hdrs = glob([
+        "single-header/ctre.hpp",
+    ]),
+    strip_include_prefix = "single-header/",
+    include_prefix = "ctre/",
+    visibility = [
+        "//visibility:public",
+    ],
+)

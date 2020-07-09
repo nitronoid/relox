@@ -1,0 +1,7 @@
+build --symlink_prefix=bazel-build/
+build --cxxopt='-std=c++17'
+build --cxxopt='-O3'
+build --cxxopt='-Wall'
+build --cxxopt='-Wextra'
+build --cxxopt='-pedantic'
+build --cxxopt='-fdiagnostics-color=always'
