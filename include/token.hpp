@@ -34,7 +34,7 @@ enum class TOKEN_TYPE : uint8_t
 
 struct Token
 {
-  using literal = std::variant<std::monostate, std::string, float>;
+  using literal = std::variant<std::monostate, std::string, float, bool>;
   TOKEN_TYPE type;
   std::string_view lexeme;
   std::size_t line;

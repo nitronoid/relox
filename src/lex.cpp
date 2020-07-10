@@ -1,7 +1,11 @@
 #include "lox/lex.hpp"
+
 #include <fmt/format.h>
+
+#include <charconv>
 #include <ctre/ctre.hpp>
 #include <magic_enum/magic_enum.hpp>
+
 #include "lox/ctu.hpp"
 
 namespace lox
@@ -91,7 +95,9 @@ namespace impl
 template <typename F, typename T, std::size_t... I>
 constexpr decltype(auto) indexed_apply(F&& f, T&& t, std::index_sequence<I...>)
 {
-	return std::invoke(std::forward<F>(f), std::make_tuple(std::forward<T>(t).template get<I>(), I)...);
+	return std::invoke(std::forward<F>(f),
+	                   std::make_tuple(std::forward<T>(t).template get<I>(),
+	                                   std::integral_constant<std::size_t, I>{})...);
 }
 }  // namespace impl
 
@@ -104,17 +110,47 @@ constexpr decltype(auto) indexed_apply(F&& f, T&& t)
 	    std::make_index_sequence<std::tuple_size_v<std::remove_reference_t<T>>>{});
 }
 
+template <TOKEN_TYPE>
+struct ParseLiteral
+{
+	constexpr auto operator()(std::string_view) const -> std::monostate { return std::monostate{}; }
+};
+template <>
+struct ParseLiteral<TOKEN_TYPE::NUMBER>
+{
+	auto operator()(std::string_view src) const -> float { return std::stof(std::string{src}); }
+};
+template <>
+struct ParseLiteral<TOKEN_TYPE::STRING>
+{
+	auto operator()(std::string_view src) const -> std::string { return std::string{src}; }
+};
+template <>
+struct ParseLiteral<TOKEN_TYPE::TRUE>
+{
+	auto operator()(std::string_view) const -> bool { return true; }
+};
+template <>
+struct ParseLiteral<TOKEN_TYPE::FALSE>
+{
+	auto operator()(std::string_view) const -> bool { return false; }
+};
+
 auto lex_token(std::string_view src, std::size_t line) -> lox::result<Token>
 {
+	// Default to an EOF
+	lox::result<Token> token = Token{TOKEN_TYPE::END, src, line, std::monostate{}};
 	// Attempt to match our grammar, find a match if available
-	lox::result<Token> token =
-	    Token{TOKEN_TYPE::END, src, line, std::monostate{}};
-	auto const extract_match = [&](auto const& x, std::size_t i) {
-		if (i == 0 || !x) return;
-		token = Token{
-		    magic_enum::enum_value<TOKEN_TYPE>(i - 1), x.to_view(), line, std::monostate{}};
+	auto const extract_match = [&](auto const& match_group, auto i) {
+		// Index zero is a full match, which we are not interested in
+		if (i.value == 0 || !match_group) return;
+		// Build a new token from this match groups token type
+		constexpr auto type = static_cast<TOKEN_TYPE>(i.value - 1);
+		token = Token{type, match_group.to_view(), line, ParseLiteral<type>{}(match_group.to_view())};
 	};
+	// Helper to apply the matcher to each group, index pair with a fold expression
 	auto const fwd = [&](auto&&... ms) { (std::apply(extract_match, ms), ...); };
+	// Apply our matcher to each match group, with its group index
 	indexed_apply(fwd, ctre::search<pattern::full>(src));
 	return token;
 }
