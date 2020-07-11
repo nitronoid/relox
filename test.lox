@@ -1,7 +1,6 @@
-// This is a comment
-42//Com
-13.37 // Com
-balh if for while = "hello" <= 3
-"foo" "bar" "hello world"
-$
-$$
+/* This /*
+is a multi-line "comment" 3.0 nil true
+****** */
+
+3 * ( 4 + "string" - 3.25) * ("hello" + "world") // Complex expression
+-9.0 * 2 /* With comment inside */< "Whoa /* string matched correctly */" == !!true == !false

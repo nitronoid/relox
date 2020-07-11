@@ -96,7 +96,6 @@ auto parse_primary(gsl::span<Token> tokens) -> parse_result
 	}
 	auto const& token = tokens[0];
 	tokens = tokens.subspan(1);
-	fmt::print("TYPE: {}\n", magic_enum::enum_name(token.type));
 	switch (token.type)
 	{
 	case TOKEN_TYPE::TRUE: return std::make_tuple(std::make_unique<Literal>(true), tokens);
