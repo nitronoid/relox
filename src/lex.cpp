@@ -15,7 +15,7 @@ namespace pattern
 template <TOKEN_TYPE>
 constexpr std::string_view match = "";
 // clang-format off
-template<> constexpr std::string_view match<TOKEN_TYPE::COMMENT> = R"(//[^\n]*)";
+template<> constexpr std::string_view match<TOKEN_TYPE::COMMENT> = R"((?://[^\n]*)|(?:/\*[^*]*\*+(?:[^/*][^*]*\*+)*/))";
 template<> constexpr std::string_view match<TOKEN_TYPE::LEFT_PAREN> = R"(\()";
 template<> constexpr std::string_view match<TOKEN_TYPE::RIGHT_PAREN> = R"(\))";
 template<> constexpr std::string_view match<TOKEN_TYPE::LEFT_BRACE> = R"(\{)";
@@ -37,26 +37,26 @@ template<> constexpr std::string_view match<TOKEN_TYPE::LESS_EQUAL> = R"(<=)";
 template<> constexpr std::string_view match<TOKEN_TYPE::GREATER> = R"(>)";
 template<> constexpr std::string_view match<TOKEN_TYPE::LESS> = R"(<)";
 template<> constexpr std::string_view match<TOKEN_TYPE::ASSIGN> = R"(=)";
-template<> constexpr std::string_view match<TOKEN_TYPE::AND> = R"(and(?:\W|$))";
-template<> constexpr std::string_view match<TOKEN_TYPE::STRUCT> = R"(struct(?:\W|$))";
-template<> constexpr std::string_view match<TOKEN_TYPE::ELSE> = R"(else(?:\W|$))";
-template<> constexpr std::string_view match<TOKEN_TYPE::FUN> = R"(fun(?:\W|$))";
-template<> constexpr std::string_view match<TOKEN_TYPE::FOR> = R"(for(?:\W|$))";
-template<> constexpr std::string_view match<TOKEN_TYPE::IF> = R"(if(?:\W|$))";
-template<> constexpr std::string_view match<TOKEN_TYPE::NIL> = R"(nil(?:\W|$))";
-template<> constexpr std::string_view match<TOKEN_TYPE::OR> = R"(or(?:\W|$))";
-template<> constexpr std::string_view match<TOKEN_TYPE::PRINT> = R"(print(?:\W|$))";
-template<> constexpr std::string_view match<TOKEN_TYPE::RETURN> = R"(return(?:\W|$))";
-template<> constexpr std::string_view match<TOKEN_TYPE::SUPER> = R"(super(?:\W|$))";
-template<> constexpr std::string_view match<TOKEN_TYPE::THIS> = R"(this(?:\W|$))";
-template<> constexpr std::string_view match<TOKEN_TYPE::TRUE> = R"(true(?:\W|$))";
-template<> constexpr std::string_view match<TOKEN_TYPE::FALSE> = R"(false(?:\W|$))";
-template<> constexpr std::string_view match<TOKEN_TYPE::VAR> = R"(var(?:\W|$))";
-template<> constexpr std::string_view match<TOKEN_TYPE::WHILE> = R"(while(?:\W|$))";
+template<> constexpr std::string_view match<TOKEN_TYPE::AND> = R"(and(?=\W|$))";
+template<> constexpr std::string_view match<TOKEN_TYPE::STRUCT> = R"(struct(?=\W|$))";
+template<> constexpr std::string_view match<TOKEN_TYPE::ELSE> = R"(else(?=\W|$))";
+template<> constexpr std::string_view match<TOKEN_TYPE::FUN> = R"(fun(?=\W|$))";
+template<> constexpr std::string_view match<TOKEN_TYPE::FOR> = R"(for(?=\W|$))";
+template<> constexpr std::string_view match<TOKEN_TYPE::IF> = R"(if(?=\W|$))";
+template<> constexpr std::string_view match<TOKEN_TYPE::NIL> = R"(nil(?=\W|$))";
+template<> constexpr std::string_view match<TOKEN_TYPE::OR> = R"(or(?=\W|$))";
+template<> constexpr std::string_view match<TOKEN_TYPE::PRINT> = R"(print(?=\W|$))";
+template<> constexpr std::string_view match<TOKEN_TYPE::RETURN> = R"(return(?=\W|$))";
+template<> constexpr std::string_view match<TOKEN_TYPE::SUPER> = R"(super(?=\W|$))";
+template<> constexpr std::string_view match<TOKEN_TYPE::THIS> = R"(this(?=\W|$))";
+template<> constexpr std::string_view match<TOKEN_TYPE::TRUE> = R"(true(?=\W|$))";
+template<> constexpr std::string_view match<TOKEN_TYPE::FALSE> = R"(false(?=\W|$))";
+template<> constexpr std::string_view match<TOKEN_TYPE::VAR> = R"(var(?=\W|$))";
+template<> constexpr std::string_view match<TOKEN_TYPE::WHILE> = R"(while(?=\W|$))";
 template<> constexpr std::string_view match<TOKEN_TYPE::IDENTIFIER> = R"([a-zA-Z_]+\w*)";
 template<> constexpr std::string_view match<TOKEN_TYPE::STRING> = R"("[^"]*")";
 template<> constexpr std::string_view match<TOKEN_TYPE::NUMBER> = R"([0-9]+(?:\.[0-9]+)?)";
-template<> constexpr std::string_view match<TOKEN_TYPE::ERROR> = R"(\$)";
+template<> constexpr std::string_view match<TOKEN_TYPE::ERROR> = R"([^\s]+)";
 // clang-format on
 
 template <std::string_view const& S1, std::string_view const&... Strs>

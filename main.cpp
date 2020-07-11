@@ -16,6 +16,7 @@ auto run(std::string_view source) -> lox::result<void>
 {
 	return lox::lex(source)
 	    .map([](auto&& tokens) {
+		    for (auto const& token : tokens) fmt::print("{}\n", magic_enum::enum_name(token.type));
 		    tokens.erase(
 		        std::remove_if(tokens.begin(),
 		                       tokens.end(),
@@ -26,7 +27,7 @@ auto run(std::string_view source) -> lox::result<void>
 	    .and_then([](auto&& tokens) { return lox::parse(tokens); })
 	    .map([](auto const& expr) {
 		    lox::AstPrinter printer;
-				std::get<0>(expr)->accept(printer);
+		    std::get<0>(expr)->accept(printer);
 		    fmt::print("{}\n", printer.m_ast);
 	    });
 }
@@ -61,20 +62,6 @@ auto run_prompt() -> lox::result<void>
 
 auto main(int argc, char* argv[]) -> int
 {
-#if 0
-  std::unique_ptr<lox::Expression> expression = std::make_unique<lox::Binary>(
-    std::make_unique<lox::Unary>(
-      std::make_unique<lox::Literal>(lox::Token::literal{123.f}),
-      lox::TOKEN_TYPE::MINUS),
-    std::make_unique<lox::Group>(
-      std::make_unique<lox::Literal>(lox::Token::literal{45.67f})),
-    lox::TOKEN_TYPE::STAR);
-
-  lox::AstPrinter visitor;
-  expression->accept(visitor);
-  fmt::print("{}\n", visitor.m_ast);
-#else
-
 	if (argc > 2)
 	{
 		fmt::print("Usage: lox [script]\n");
@@ -91,7 +78,5 @@ auto main(int argc, char* argv[]) -> int
 		fmt::print("Running lox repl\n");
 		run_prompt();
 	}
-
-#endif
 	return EXIT_SUCCESS;
 }

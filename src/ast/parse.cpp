@@ -1,7 +1,5 @@
 #include "lox/ast/parse.hpp"
-
 #include <fmt/format.h>
-
 #include <magic_enum/magic_enum.hpp>
 
 namespace lox
@@ -9,7 +7,7 @@ namespace lox
 namespace
 {
 template <TOKEN_TYPE... Types>
-constexpr auto match(gsl::span<Token> tokens)
+constexpr auto match(gsl::span<Token> tokens) -> bool
 {
 	if (tokens.empty()) return false;
 	return ((tokens[0].type == Types) || ...);
@@ -18,10 +16,16 @@ constexpr auto match(gsl::span<Token> tokens)
 template <TOKEN_TYPE... Types, typename F>
 auto parse_recursive_binary(gsl::span<Token> tokens, F&& rule) -> parse_result
 {
+	// Check that we have a lhs operand
+	if (!match<TOKEN_TYPE::MINUS>(tokens) && match<Types...>(tokens))
+	{
+		return lox::error("Binary expression missing left operand.",
+		                  tokens.empty() ? ~0u : tokens[0].line);
+	}
 	// Parse an initial comparison
-	std::unique_ptr<Expression> expr;
 	auto parsed = std::invoke(std::forward<F>(rule), tokens);
 	if (!parsed.has_value()) return parsed;
+	std::unique_ptr<Expression> expr;
 	std::tie(expr, tokens) = std::move(*parsed);
 	// Continue to parse binary equalities until we've exhausted the contiguous set
 	while (match<Types...>(tokens))
@@ -75,11 +79,11 @@ auto parse_unary(gsl::span<Token> tokens) -> parse_result
 	if (match<TOKEN_TYPE::BANG, TOKEN_TYPE::MINUS>(tokens))
 	{
 		TOKEN_TYPE const operation = tokens[0].type;
-		std::unique_ptr<Expression> right;
-		auto parsed = parse_unary(tokens);
+		auto parsed = parse_unary(tokens.subspan(1));
 		if (!parsed.has_value()) return parsed;
+		std::unique_ptr<Expression> right;
 		std::tie(right, tokens) = std::move(*parsed);
-		return std::make_tuple(std::make_unique<Unary>(std::move(right), operation), tokens.subspan(1));
+		return std::make_tuple(std::make_unique<Unary>(std::move(right), operation), tokens);
 	}
 	return parse_primary(tokens);
 }
