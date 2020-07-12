@@ -52,7 +52,12 @@ auto parse_recursive_binary(gsl::span<Token> tokens, F&& rule) -> parse_result
 
 auto parse(gsl::span<Token> tokens) -> parse_result { return parse_expression(tokens); }
 
-auto parse_expression(gsl::span<Token> tokens) -> parse_result { return parse_ternary(tokens); }
+auto parse_expression(gsl::span<Token> tokens) -> parse_result { return parse_block(tokens); }
+
+auto parse_block(gsl::span<Token> tokens) -> parse_result
+{
+	return parse_recursive_binary<TOKEN_TYPE::COMMA>(tokens, parse_ternary);
+}
 
 auto parse_ternary(gsl::span<Token> tokens) -> parse_result
 {
@@ -69,11 +74,11 @@ auto parse_ternary(gsl::span<Token> tokens) -> parse_result
 		tokens = tokens.subspan(1);
 		std::unique_ptr<Expression> left, right;
 		auto parsed =
-		    parse_expression(tokens)
+		    parse_ternary(tokens)
 		        .and_then([&](auto&& lhs) -> parse_result {
 			        std::tie(left, tokens) = std::move(lhs);
 			        if (match<TOKEN_TYPE::COLON>(tokens))
-				        return parse_expression(tokens.subspan(1));
+				        return parse_ternary(tokens.subspan(1));
 			        else
 				        return lox::error("Expected : in ternary expression.", tokens.data()[-1].line);
 		        })

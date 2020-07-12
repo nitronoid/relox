@@ -13,9 +13,11 @@ namespace lox
 {
 using parse_result = result<std::tuple<std::unique_ptr<Expression>, gsl::span<Token>>>;
 auto parse(gsl::span<Token> tokens) -> parse_result;
-/// expression -> equality
+/// expression -> block
 auto parse_expression(gsl::span<Token> tokens) -> parse_result;
-/// ternary -> equality (? expression : expression)*
+/// block -> ternary ("," ternary)*
+auto parse_block(gsl::span<Token> tokens) -> parse_result;
+/// ternary -> equality ("?" ternary ":" ternary)*
 auto parse_ternary(gsl::span<Token> tokens) -> parse_result;
 /// equality -> comparison (("!=" | "==") comparison)*
 auto parse_equality(gsl::span<Token> tokens) -> parse_result;
