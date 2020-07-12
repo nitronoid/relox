@@ -1,6 +1,6 @@
 #pragma once
-#if !defined(LOX_EXPRESSION_H)
-#define LOX_EXPRESSION_H
+#if !defined(LOX_AST_EXPRESSION_H)
+#define LOX_AST_EXPRESSION_H
 
 #include "lox/token.hpp"
 #include "lox/ast/visitor.hpp"
@@ -73,5 +73,5 @@ struct Unary final : public ExpressionBase<Unary>
 };
 }  // namespace lox
 
-#endif  // LOX_EXPRESSION_H
+#endif  // LOX_AST_EXPRESSION_H
 

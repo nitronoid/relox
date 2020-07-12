@@ -1,6 +1,6 @@
 #pragma once
-#if !defined(LOX_EXPRESSION_FWD_H)
-#define LOX_EXPRESSION_FWD_H
+#if !defined(LOX_AST_EXPRESSION_FWD_H)
+#define LOX_AST_EXPRESSION_FWD_H
 
 namespace lox
 {
@@ -12,4 +12,4 @@ struct Literal;
 struct Unary;
 }
 
-#endif // LOX_EXPRESSION_FWD_H
+#endif // LOX_AST_EXPRESSION_FWD_H

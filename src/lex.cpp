@@ -125,7 +125,10 @@ struct ParseLiteral<TOKEN_TYPE::NUMBER>
 template <>
 struct ParseLiteral<TOKEN_TYPE::STRING>
 {
-	auto operator()(std::string_view src) const -> std::string { return std::string{src}; }
+	auto operator()(std::string_view src) const -> std::string
+	{
+		return std::string{src.substr(1, src.size() - 2)};
+	}
 };
 template <>
 struct ParseLiteral<TOKEN_TYPE::TRUE>

@@ -10,6 +10,7 @@
 #include "lox/ast/expression.hpp"
 #include "lox/ast/parse.hpp"
 #include "lox/ast/printer.hpp"
+#include "lox/ast/interpreter.hpp"
 #include "lox/lex.hpp"
 
 auto run(std::string_view source) -> lox::result<void>
@@ -27,8 +28,11 @@ auto run(std::string_view source) -> lox::result<void>
 	    .and_then([](auto&& tokens) { return lox::parse(tokens); })
 	    .map([](auto const& expr) {
 		    lox::AstPrinter printer;
+		    lox::Interpreter interpreter;
 		    std::get<0>(expr)->accept(printer);
 		    fmt::print("{}\n", printer.m_ast);
+		    std::get<0>(expr)->accept(interpreter);
+		    fmt::print("{}\n", std::visit(lox::LiteralToString{}, interpreter.result));
 	    });
 }
 

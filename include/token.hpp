@@ -2,10 +2,11 @@
 #if !defined(LOX_TOKEN_H)
 #define LOX_TOKEN_H
 
-#include <vector>
-#include <variant>
 #include <cstdint>
 #include <string_view>
+#include <variant>
+#include <vector>
+
 #include "lox/error.hpp"
 
 namespace lox
@@ -34,11 +35,11 @@ enum class TOKEN_TYPE : uint8_t
 
 struct Token
 {
-  using literal = std::variant<std::monostate, std::string, float, bool>;
-  TOKEN_TYPE type;
-  std::string_view lexeme;
-  std::size_t line;
-  literal literal_value{std::monostate{}};
+	using literal = std::variant<std::monostate, std::string, float, bool>;
+	TOKEN_TYPE type;
+	std::string_view lexeme;
+	std::size_t line;
+	literal literal_value{std::monostate{}};
 };
-} // namespace lox
-#endif // LOX_TOKEN_H
+}  // namespace lox
+#endif  // LOX_TOKEN_H

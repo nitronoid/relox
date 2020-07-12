@@ -1,6 +1,6 @@
 #pragma once
-#if !defined(LOX_VISITOR_H)
-#define LOX_VISITOR_H
+#if !defined(LOX_AST_VISITOR_H)
+#define LOX_AST_VISITOR_H
 
 #include "lox/ast/expression_fwd.hpp"
 
@@ -10,12 +10,12 @@ struct AstVisitor
 {
 	virtual ~AstVisitor() = default;
 
-	virtual void visit(Ternary const&) = 0;
-	virtual void visit(Binary const&) = 0;
-	virtual void visit(Group const&) = 0;
-	virtual void visit(Literal const&) = 0;
-	virtual void visit(Unary const&) = 0;
+	virtual auto visit(Ternary const&) -> void = 0;
+	virtual auto visit(Binary const&) -> void = 0;
+	virtual auto visit(Group const&) -> void = 0;
+	virtual auto visit(Literal const&) -> void = 0;
+	virtual auto visit(Unary const&) -> void = 0;
 };
 }  // namespace lox
 
-#endif  // LOX_VISITOR_H
+#endif  // LOX_AST_VISITOR_H

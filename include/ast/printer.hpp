@@ -1,36 +1,30 @@
 #pragma once
-#if !defined(LOX_PRINTER_H)
-#define LOX_PRINTER_H
+#if !defined(LOX_AST_PRINTER_H)
+#define LOX_AST_PRINTER_H
 
 #include <magic_enum/magic_enum.hpp>
 
 #include "lox/ast/expression.hpp"
+#include "lox/literal_to_string.hpp"
 
 namespace lox
 {
-struct AstPrinter : public AstVisitor
+struct AstPrinter final : public AstVisitor
 {
-	virtual void visit(Ternary const& expr) override
+	virtual auto visit(Ternary const& expr) -> void override
 	{
 		parenthesize("TERNARY", *expr.m_cond, *expr.m_left, *expr.m_right);
 	}
-	virtual void visit(Binary const& expr) override
+	virtual auto visit(Binary const& expr) -> void override
 	{
 		parenthesize(magic_enum::enum_name(expr.m_op), *expr.m_left, *expr.m_right);
 	}
-	virtual void visit(Group const& expr) override { parenthesize("group", *expr.m_expression); }
-	virtual void visit(Literal const& expr) override
+	virtual auto visit(Group const& expr) -> void override { parenthesize("group", *expr.m_expression); }
+	virtual auto visit(Literal const& expr) -> void override
 	{
-		struct ToString
-		{
-			auto operator()(std::string const& v) const -> std::string { return v; }
-			auto operator()(float const& v) const -> std::string { return std::to_string(v); }
-			auto operator()(bool const& v) const -> std::string { return v ? "true" : "false"; }
-			auto operator()(std::monostate const&) const -> std::string { return "nil"; }
-		};
-		m_ast += std::visit(ToString{}, expr.m_literal);
+		m_ast += std::visit(LiteralToString{}, expr.m_literal);
 	}
-	virtual void visit(Unary const& expr) override
+	virtual auto visit(Unary const& expr) -> void override
 	{
 		parenthesize(magic_enum::enum_name(expr.m_op), *expr.m_expression);
 	}
@@ -53,5 +47,5 @@ struct AstPrinter : public AstVisitor
 };
 }  // namespace lox
 
-#endif  // LOX_PRINTER_H
+#endif  // LOX_AST_PRINTER_H
 

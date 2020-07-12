@@ -1,6 +1,6 @@
 #pragma once
-#if !defined(LOX_PARSE_H)
-#define LOX_PARSE_H
+#if !defined(LOX_AST_PARSE_H)
+#define LOX_AST_PARSE_H
 
 #include <gsl/span>
 #include <tuple>
@@ -33,4 +33,4 @@ auto parse_unary(gsl::span<Token> tokens) -> parse_result;
 auto parse_primary(gsl::span<Token> tokens) -> parse_result;
 }  // namespace lox
 
-#endif  // LOX_PARSE_H
+#endif  // LOX_AST_PARSE_H
