@@ -5,6 +5,7 @@
 namespace lox
 {
 // Forward decl
+struct Ternary;
 struct Binary;
 struct Group;
 struct Literal;

@@ -2,5 +2,8 @@
 is a multi-line "comment" 3.0 nil true
 ****** */
 
+// Ternary test
+true ? 5 : 6
 3 * ( 4 + "string" - 3.25) * ("hello" + "world") // Complex expression
 -9.0 * 2 /* With comment inside */< "Whoa /* string matched correctly */" == !!true == !false
+

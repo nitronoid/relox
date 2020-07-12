@@ -15,6 +15,8 @@ using parse_result = result<std::tuple<std::unique_ptr<Expression>, gsl::span<To
 auto parse(gsl::span<Token> tokens) -> parse_result;
 /// expression -> equality
 auto parse_expression(gsl::span<Token> tokens) -> parse_result;
+/// ternary -> equality (? expression : expression)*
+auto parse_ternary(gsl::span<Token> tokens) -> parse_result;
 /// equality -> comparison (("!=" | "==") comparison)*
 auto parse_equality(gsl::span<Token> tokens) -> parse_result;
 /// comparison -> addition ((">" | ">=" | "<" | "<=") addition)*

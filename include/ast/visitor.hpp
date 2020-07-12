@@ -10,6 +10,7 @@ struct AstVisitor
 {
 	virtual ~AstVisitor() = default;
 
+	virtual void visit(Ternary const&) = 0;
 	virtual void visit(Binary const&) = 0;
 	virtual void visit(Group const&) = 0;
 	virtual void visit(Literal const&) = 0;

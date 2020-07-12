@@ -29,6 +29,8 @@ template<> constexpr std::string_view match<TOKEN_TYPE::PLUS> = R"(\+)";
 template<> constexpr std::string_view match<TOKEN_TYPE::SEMICOLON> = R"(;)";
 template<> constexpr std::string_view match<TOKEN_TYPE::SLASH> = R"(/)";
 template<> constexpr std::string_view match<TOKEN_TYPE::STAR> = R"(\*)";
+template<> constexpr std::string_view match<TOKEN_TYPE::QUESTION> = R"(\?)";
+template<> constexpr std::string_view match<TOKEN_TYPE::COLON> = R"(:)";
 template<> constexpr std::string_view match<TOKEN_TYPE::BANG_EQUAL> = R"(!=)";
 template<> constexpr std::string_view match<TOKEN_TYPE::BANG> = R"(!)";
 template<> constexpr std::string_view match<TOKEN_TYPE::EQUAL> = R"(==)";

@@ -10,6 +10,10 @@ namespace lox
 {
 struct AstPrinter : public AstVisitor
 {
+	virtual void visit(Ternary const& expr) override
+	{
+		parenthesize("TERNARY", *expr.m_cond, *expr.m_left, *expr.m_right);
+	}
 	virtual void visit(Binary const& expr) override
 	{
 		parenthesize(magic_enum::enum_name(expr.m_op), *expr.m_left, *expr.m_right);

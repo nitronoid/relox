@@ -25,6 +25,17 @@ struct ExpressionBase : public Expression
 	}
 };
 
+struct Ternary final : public ExpressionBase<Ternary>
+{
+	Ternary(std::unique_ptr<Expression> cond, std::unique_ptr<Expression> left, std::unique_ptr<Expression> right)
+	  : m_cond(std::move(cond)), m_left(std::move(left)), m_right(std::move(right))
+	{
+	}
+	std::unique_ptr<Expression> m_cond;
+	std::unique_ptr<Expression> m_left;
+	std::unique_ptr<Expression> m_right;
+};
+
 struct Binary final : public ExpressionBase<Binary>
 {
 	Binary(std::unique_ptr<Expression> left, std::unique_ptr<Expression> right, TOKEN_TYPE op)

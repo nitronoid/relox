@@ -1,5 +1,7 @@
 #include "lox/ast/parse.hpp"
+
 #include <fmt/format.h>
+
 #include <magic_enum/magic_enum.hpp>
 
 namespace lox
@@ -23,22 +25,23 @@ auto parse_recursive_binary(gsl::span<Token> tokens, F&& rule) -> parse_result
 		                  tokens.empty() ? ~0u : tokens[0].line);
 	}
 	// Parse an initial comparison
-	auto parsed = std::invoke(std::forward<F>(rule), tokens);
-	if (!parsed.has_value()) return parsed;
 	std::unique_ptr<Expression> expr;
-	std::tie(expr, tokens) = std::move(*parsed);
+	{
+		auto parsed = std::invoke(std::forward<F>(rule), tokens);
+		if (!parsed.has_value()) return parsed;
+		std::tie(expr, tokens) = std::move(*parsed);
+	}
 	// Continue to parse binary equalities until we've exhausted the contiguous set
 	while (match<Types...>(tokens))
 	{
-		auto const parsed = [&] {
-			std::unique_ptr<Expression> right;
-			TOKEN_TYPE const operation = tokens[0].type;
-			return std::invoke(std::forward<F>(rule), tokens.subspan(1))
-			    .map([&](auto&& parsed) { std::tie(right, tokens) = std::move(parsed); })
-			    .map([&] {
-				    expr = std::make_unique<Binary>(std::move(expr), std::move(right), operation);
-			    });
-		}();
+		std::unique_ptr<Expression> right;
+		TOKEN_TYPE const operation = tokens[0].type;
+		auto const parsed =
+		    std::invoke(std::forward<F>(rule), tokens.subspan(1))
+		        .map([&](auto&& parsed) { std::tie(right, tokens) = std::move(parsed); })
+		        .map([&] {
+			        expr = std::make_unique<Binary>(std::move(expr), std::move(right), operation);
+		        });
 		if (!parsed) return lox::error(parsed.error());
 	}
 	// Return the expression tree head and the reduced token set
@@ -49,7 +52,38 @@ auto parse_recursive_binary(gsl::span<Token> tokens, F&& rule) -> parse_result
 
 auto parse(gsl::span<Token> tokens) -> parse_result { return parse_expression(tokens); }
 
-auto parse_expression(gsl::span<Token> tokens) -> parse_result { return parse_equality(tokens); }
+auto parse_expression(gsl::span<Token> tokens) -> parse_result { return parse_ternary(tokens); }
+
+auto parse_ternary(gsl::span<Token> tokens) -> parse_result
+{
+	// Parse an initial equality
+	std::unique_ptr<Expression> expr;
+	{
+		auto parsed = parse_equality(tokens);
+		if (!parsed.has_value()) return parsed;
+		std::tie(expr, tokens) = std::move(*parsed);
+	}
+	// Parse two expressions, implicit recursion allows each to also be a ternary
+	if (match<TOKEN_TYPE::QUESTION>(tokens))
+	{
+		tokens = tokens.subspan(1);
+		std::unique_ptr<Expression> left, right;
+		auto parsed =
+		    parse_expression(tokens)
+		        .and_then([&](auto&& lhs) -> parse_result {
+			        std::tie(left, tokens) = std::move(lhs);
+			        if (match<TOKEN_TYPE::COLON>(tokens))
+				        return parse_expression(tokens.subspan(1));
+			        else
+				        return lox::error("Expected : in ternary expression.", tokens.data()[-1].line);
+		        })
+		        .map([&](auto&& rhs) { std::tie(right, tokens) = std::move(rhs); });
+		if (!parsed.has_value()) return lox::error(parsed.error());
+		expr = std::make_unique<Ternary>(std::move(expr), std::move(left), std::move(right));
+	}
+	// Return the expression tree head and the reduced token set
+	return std::make_tuple(std::move(expr), tokens);
+}
 
 auto parse_equality(gsl::span<Token> tokens) -> parse_result
 {
