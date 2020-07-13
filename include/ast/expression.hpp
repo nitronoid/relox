@@ -11,7 +11,7 @@ namespace lox
 struct Expression
 {
 	virtual ~Expression() = default;
-	virtual void accept(AstVisitor& visitor) const = 0;
+	virtual auto accept(AstVisitor& visitor) const -> result<void> = 0;
 };
 
 template <typename T>
@@ -19,9 +19,9 @@ struct ExpressionBase : public Expression
 {
 	virtual ~ExpressionBase() = default;
 
-	virtual void accept(AstVisitor& visitor) const override
+	virtual auto accept(AstVisitor& visitor) const -> result<void> override
 	{
-		visitor.visit(static_cast<T const&>(*this));
+		return visitor.visit(static_cast<T const&>(*this));
 	}
 };
 

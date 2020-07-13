@@ -8,9 +8,9 @@
 #include <magic_enum/magic_enum.hpp>
 
 #include "lox/ast/expression.hpp"
+#include "lox/ast/interpreter.hpp"
 #include "lox/ast/parse.hpp"
 #include "lox/ast/printer.hpp"
-#include "lox/ast/interpreter.hpp"
 #include "lox/lex.hpp"
 
 auto run(std::string_view source) -> lox::result<void>
@@ -26,13 +26,16 @@ auto run(std::string_view source) -> lox::result<void>
 		    return std::move(tokens);
 	    })
 	    .and_then([](auto&& tokens) { return lox::parse(tokens); })
-	    .map([](auto const& expr) {
+	    .map([](auto const& parsed) {
 		    lox::AstPrinter printer;
 		    lox::Interpreter interpreter;
-		    std::get<0>(expr)->accept(printer);
-		    fmt::print("{}\n", printer.m_ast);
-		    std::get<0>(expr)->accept(interpreter);
-		    fmt::print("{}\n", std::visit(lox::LiteralToString{}, interpreter.result));
+		    auto const& expr = std::get<0>(parsed);
+		    // Print the expression tree
+		    expr->accept(printer).map([&] { fmt::print("{}\n", printer.m_ast); }).map_error(lox::report);
+		    // Evaluate the expression tree
+		    expr->accept(interpreter)
+		        .map([&] { fmt::print("{}\n", std::visit(lox::LiteralToString{}, interpreter.result)); })
+		        .map_error(lox::report);
 	    });
 }
 
