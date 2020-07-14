@@ -8,6 +8,7 @@
 #include <magic_enum/magic_enum.hpp>
 
 #include "lox/ast/expression.hpp"
+#include "lox/literal_to_string.hpp"
 
 namespace lox
 {
@@ -25,9 +26,16 @@ struct Interpreter final : public AstVisitor
 	{
 		auto operator()(std::string const& v) const -> Token::literal
 		{
-			return std::get<std::string>(*lhs) + v;
+			return std::visit(LiteralToString{}, *lhs) + v;
 		}
-		auto operator()(float const& v) const -> Token::literal { return std::get<float>(*lhs) + v; }
+		auto operator()(float const& v) const -> Token::literal
+		{
+			if (std::holds_alternative<std::string>(*lhs))
+			{
+				return std::get<std::string>(*lhs) + std::to_string(v);
+			}
+			return std::get<float>(*lhs) + v;
+		}
 		template <typename T>
 		auto operator()(T const&) const -> Token::literal
 		{
@@ -50,54 +58,69 @@ struct Interpreter final : public AstVisitor
 
 	virtual auto visit(Binary const& expr) -> result<void> override
 	{
-		auto const evaluated =
-		    expr.m_left->accept(*this)
-		        .and_then([&] {
-			        // Cache the result
-			        auto const lhs = result;
-			        // Exec the rhs
-			        return expr.m_right->accept(*this).map([&] { return lhs; });
-		        })
-		        .and_then([&](auto&& lhs) -> lox::result<Token::literal> {
-			        try
-			        {
-				        // Apply the binary op to both operands
-				        switch (expr.m_op)
-				        {
-				        case TOKEN_TYPE::PLUS:
-					        try
-					        {
-						        return std::visit(Add{&lhs}, result);
-					        }
-					        catch (std::bad_variant_access const&)
-					        {
-						        return lox::error(fmt::format("Mismatched types for {} expression.",
-						                                      magic_enum::enum_name(expr.m_op)),
-						                          ~0u);
-					        }
-				        case TOKEN_TYPE::MINUS: return std::get<float>(lhs) - std::get<float>(result);
-				        case TOKEN_TYPE::STAR: return std::get<float>(lhs) * std::get<float>(result);
-				        case TOKEN_TYPE::SLASH: return std::get<float>(lhs) / std::get<float>(result);
-				        case TOKEN_TYPE::GREATER: return std::get<float>(lhs) > std::get<float>(result);
-				        case TOKEN_TYPE::GREATER_EQUAL:
-					        return std::get<float>(lhs) >= std::get<float>(result);
-				        case TOKEN_TYPE::LESS: return std::get<float>(lhs) < std::get<float>(result);
-				        case TOKEN_TYPE::LESS_EQUAL:
-					        return std::get<float>(lhs) <= std::get<float>(result);
-				        case TOKEN_TYPE::BANG_EQUAL: return lhs != result;
-				        case TOKEN_TYPE::EQUAL: return lhs == result;
-				        default:
-					        return lox::error("Unhandled binary op. FIXME: Error handle this properly",
-					                          ~0u);
-				        }
-			        }
-			        catch (std::bad_variant_access const&)
-			        {
-				        return lox::error(fmt::format("Expected number as operand to {}.",
-				                                      magic_enum::enum_name(expr.m_op)),
-				                          ~0u);
-			        }
-		        });
+		auto const mismatched_type_error = [&] {
+			return lox::error(
+			    fmt::format("Mismatched types for {} expression.", magic_enum::enum_name(expr.m_op)),
+			    ~0u);
+		};
+		auto const matched_binary =
+		    [&](auto const& lhs, auto const& rhs, auto op) -> lox::result<Token::literal> {
+			if (lhs.index() == rhs.index())
+			{
+				return std::invoke(op, lhs, rhs);
+			}
+			return mismatched_type_error();
+		};
+		auto const float_binary =
+		    [&](auto const& lhs, auto const& rhs, auto op) -> lox::result<Token::literal> {
+			if (std::holds_alternative<float>(lhs) && std::holds_alternative<float>(rhs))
+			{
+				return std::invoke(op, std::get<float>(lhs), std::get<float>(rhs));
+			}
+			return lox::error(fmt::format("Expected number operands for {} expression.",
+			                              magic_enum::enum_name(expr.m_op)),
+			                  ~0u);
+		};
+		auto const compute_rhs = [&] {
+			// Cache the result
+			auto const lhs = result;
+			// Exec the rhs
+			return expr.m_right->accept(*this).map([&] { return lhs; });
+		};
+		auto const compute_result = [&](auto&& lhs) -> lox::result<Token::literal> {
+			// Apply the binary op to both operands
+			switch (expr.m_op)
+			{
+			case TOKEN_TYPE::PLUS:
+				try
+				{
+					return std::visit(Add{&lhs}, result);
+				}
+				catch (std::bad_variant_access const&)
+				{
+					return mismatched_type_error();
+				}
+			case TOKEN_TYPE::MINUS: return float_binary(lhs, result, std::minus<>{});
+			case TOKEN_TYPE::STAR: return float_binary(lhs, result, std::multiplies<>{});
+			case TOKEN_TYPE::SLASH:
+			{
+				if (std::holds_alternative<float>(result) && std::get<float>(result) == 0.f)
+				{
+					return lox::error("Division by zero is prohibited.", ~0u);
+				}
+				return float_binary(lhs, result, std::divides<>{});
+			}
+			case TOKEN_TYPE::GREATER: return matched_binary(lhs, result, std::greater<>{});
+			case TOKEN_TYPE::GREATER_EQUAL: return matched_binary(lhs, result, std::greater_equal<>{});
+			case TOKEN_TYPE::LESS: return matched_binary(lhs, result, std::less<>{});
+			case TOKEN_TYPE::LESS_EQUAL: return matched_binary(lhs, result, std::less_equal<>{});
+			case TOKEN_TYPE::BANG_EQUAL: return lhs != result;
+			case TOKEN_TYPE::EQUAL: return lhs == result;
+			case TOKEN_TYPE::COMMA: return result;  // Discard the left hand side
+			default: return lox::error("Unhandled binary op. FIXME: Error handle this properly", ~0u);
+			}
+		};
+		auto const evaluated = expr.m_left->accept(*this).and_then(compute_rhs).and_then(compute_result);
 		if (evaluated)
 		{
 			result = *evaluated;
@@ -119,27 +142,26 @@ struct Interpreter final : public AstVisitor
 
 	virtual auto visit(Unary const& expr) -> result<void> override
 	{
-		auto const evaluated =
-		    expr.m_expression->accept(*this).and_then([&]() -> lox::result<Token::literal> {
-			    try
-			    {
-				    switch (expr.m_op)
-				    {
-				    case TOKEN_TYPE::MINUS: return -std::get<float>(result);
-				    case TOKEN_TYPE::BANG: return !std::visit(Truth{}, result);
-				    default:
-					    return lox::error(
-					        fmt::format("Unhandled unary op {}.", magic_enum::enum_name(expr.m_op)),
-					        ~0u);
-				    }
-			    }
-			    catch (std::bad_variant_access const&)
-			    {
-				    return lox::error(fmt::format("Expected number as operand to {}.",
-				                                  magic_enum::enum_name(expr.m_op)),
-				                      ~0u);
-			    }
-		    });
+		auto const compute_result = [&]() -> lox::result<Token::literal> {
+			switch (expr.m_op)
+			{
+			case TOKEN_TYPE::MINUS:
+			{
+				if (std::holds_alternative<float>(result))
+				{
+					return -std::get<float>(result);
+				}
+				return lox::error(
+				    fmt::format("Expected number as operand to {}.", magic_enum::enum_name(expr.m_op)),
+				    ~0u);
+			}
+			case TOKEN_TYPE::BANG: return !std::visit(Truth{}, result);
+			default:
+				return lox::error(
+				    fmt::format("Unhandled unary op {}.", magic_enum::enum_name(expr.m_op)), ~0u);
+			}
+		};
+		auto const evaluated = expr.m_expression->accept(*this).and_then(compute_result);
 		if (evaluated)
 		{
 			result = *evaluated;

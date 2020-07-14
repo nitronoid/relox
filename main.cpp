@@ -34,7 +34,7 @@ auto run(std::string_view source) -> lox::result<void>
 		    expr->accept(printer).map([&] { fmt::print("{}\n", printer.m_ast); }).map_error(lox::report);
 		    // Evaluate the expression tree
 		    expr->accept(interpreter)
-		        .map([&] { fmt::print("{}\n", std::visit(lox::LiteralToString{}, interpreter.result)); })
+		        .map([&] { fmt::print("{}\n", interpreter.result); })
 		        .map_error(lox::report);
 	    });
 }
