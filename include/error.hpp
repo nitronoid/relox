@@ -24,9 +24,6 @@ inline auto error(Ts&&... xs) noexcept
   return tl::make_unexpected(Error{std::forward<Ts>(xs)...});
 }
 
-inline auto ok() noexcept -> result<void>
-{
-  return {};
-}
-}
-#endif // LOX_ERROR_H
+inline auto ok() noexcept -> result<void> { return {}; }
+}  // namespace lox
+#endif  // LOX_ERROR_H
