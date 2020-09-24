@@ -27,11 +27,12 @@ auto run(std::string_view source) -> lox::result<void>
     })
     .and_then([](auto&& tokens) { return lox::parse(tokens); })
     .map([](auto const& parsed) {
-      lox::AstPrinter printer;
+      // Outside the loop for persistent variables
       lox::Interpreter interpreter;
       // Print the expression tree
       for (auto const& expr : parsed)
       {
+        lox::AstPrinter printer;
         expr->accept(printer).map([&] { fmt::print("{}\n", printer.m_ast); }).map_error(lox::report);
         // Evaluate the expression tree
         expr->accept(interpreter)

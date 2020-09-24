@@ -50,7 +50,7 @@ auto parse_recursive_binary(gsl::span<Token> tokens, F&& rule) -> parse_result
 auto parse(gsl::span<Token> tokens) -> parse_list_result
 {
   std::vector<std::unique_ptr<Expression>> program;
-  while (!tokens.empty())
+  while (!tokens.empty() && tokens[0].type != TOKEN_TYPE::END)
   {
     program.emplace_back();
     auto stmt = parse_declaration(tokens);
