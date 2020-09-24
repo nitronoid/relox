@@ -11,25 +11,49 @@
 
 namespace lox
 {
+using parse_list_result = result<std::vector<std::unique_ptr<Expression>>>;
 using parse_result = result<std::tuple<std::unique_ptr<Expression>, gsl::span<Token>>>;
-auto parse(gsl::span<Token> tokens) -> parse_result;
+
+/// Parse a list of tokens to produce a list of instructions
+auto parse(gsl::span<Token> tokens) -> parse_list_result;
+
+/// definition -> definition | statement
+auto parse_declaration(gsl::span<Token> tokens) -> parse_result;
+
+/// definition -> "var" IDENTIFIER ("=" expression)? ";"
+auto parse_definition(gsl::span<Token> tokens) -> parse_result;
+
+/// statement -> expression | print ";"
+auto parse_statement(gsl::span<Token> tokens) -> parse_result;
+
+/// print -> "print" expression ";"
+auto parse_print(gsl::span<Token> tokens) -> parse_result;
+
 /// expression -> block
 auto parse_expression(gsl::span<Token> tokens) -> parse_result;
+
 /// block -> ternary ("," ternary)*
 auto parse_block(gsl::span<Token> tokens) -> parse_result;
+
 /// ternary -> equality ("?" ternary ":" ternary)*
 auto parse_ternary(gsl::span<Token> tokens) -> parse_result;
+
 /// equality -> comparison (("!=" | "==") comparison)*
 auto parse_equality(gsl::span<Token> tokens) -> parse_result;
+
 /// comparison -> addition ((">" | ">=" | "<" | "<=") addition)*
 auto parse_comparison(gsl::span<Token> tokens) -> parse_result;
+
 /// addition -> multiplication (("-" | "+") multiplication)*
 auto parse_addition(gsl::span<Token> tokens) -> parse_result;
+
 /// multiplication -> unary (("/" | "*") unary)*
 auto parse_multiplication(gsl::span<Token> tokens) -> parse_result;
+
 /// unary -> ("!" | "-") unary | primary
 auto parse_unary(gsl::span<Token> tokens) -> parse_result;
-/// primary -> NUMBER | STRING | "false" | "true" | "nil" | "(" expression ")"
+
+/// primary -> NUMBER | STRING | "false" | "true" | "nil" | "(" expression ")" | IDENTIFIER
 auto parse_primary(gsl::span<Token> tokens) -> parse_result;
 }  // namespace lox
 

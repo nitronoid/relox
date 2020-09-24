@@ -5,6 +5,10 @@
 namespace lox
 {
 // Forward decl
+struct Definition;
+struct Read;
+struct Statement;
+struct Print;
 struct Ternary;
 struct Binary;
 struct Group;

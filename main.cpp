@@ -29,13 +29,15 @@ auto run(std::string_view source) -> lox::result<void>
     .map([](auto const& parsed) {
       lox::AstPrinter printer;
       lox::Interpreter interpreter;
-      auto const& expr = std::get<0>(parsed);
       // Print the expression tree
-      expr->accept(printer).map([&] { fmt::print("{}\n", printer.m_ast); }).map_error(lox::report);
-      // Evaluate the expression tree
-      expr->accept(interpreter)
-        .map([&] { fmt::print("{}\n", interpreter.result); })
-        .map_error(lox::report);
+      for (auto const& expr : parsed)
+      {
+        expr->accept(printer).map([&] { fmt::print("{}\n", printer.m_ast); }).map_error(lox::report);
+        // Evaluate the expression tree
+        expr->accept(interpreter)
+          .map([&] { fmt::print("{}\n", interpreter.result); })
+          .map_error(lox::report);
+      }
     });
 }
 

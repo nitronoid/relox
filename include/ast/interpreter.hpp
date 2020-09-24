@@ -8,6 +8,7 @@
 #include <magic_enum/magic_enum.hpp>
 
 #include "lox/ast/expression.hpp"
+#include "lox/environment.hpp"
 #include "lox/literal_to_string.hpp"
 
 namespace lox
@@ -43,6 +44,45 @@ struct Interpreter final : public AstVisitor
     }
     Token::literal const* lhs;
   };
+
+  virtual auto visit(Definition const& expr) -> result<void> override
+  {
+    if (auto value = expr.m_value->accept(*this); !value.has_value()) return value;
+
+    environment.update(Key{expr.m_name.lexeme}, Environment::Value{result});
+    return lox::ok();
+  }
+
+  virtual auto visit(Read const& expr) -> result<void> override
+  {
+    auto value = environment.lookup(Key{expr.m_name.lexeme});
+    if (!value.has_value()) return lox::error(value.error());
+    result = (*value)->value;
+    return lox::ok();
+  }
+
+  virtual auto visit(Statement const& stmt) -> result<void> override
+  {
+    // Evaluate the condition
+    if (auto res = stmt.m_expression->accept(*this); !res.has_value())
+    {
+      return lox::error(res.error());
+    }
+    result = std::monostate{};
+    return lox::ok();
+  }
+
+  virtual auto visit(Print const& stmt) -> result<void> override
+  {
+    // Evaluate the condition
+    if (auto res = stmt.m_value->accept(*this); !res.has_value())
+    {
+      return lox::error(res.error());
+    }
+    fmt::print("{}\n", result);
+    result = std::monostate{};
+    return lox::ok();
+  }
 
   virtual auto visit(Ternary const& expr) -> result<void> override
   {
@@ -167,6 +207,7 @@ struct Interpreter final : public AstVisitor
     return lox::error(evaluated.error());
   }
 
+  Environment environment;
   Token::literal result;
 };
 }  // namespace lox

@@ -11,6 +11,26 @@ namespace lox
 {
 struct AstPrinter final : public AstVisitor
 {
+  virtual auto visit(Definition const& expr) -> result<void> override
+  {
+    parenthesize(fmt::format("Definition {}", expr.m_name.lexeme), *expr.m_value);
+    return lox::ok();
+  }
+  virtual auto visit(Read const& expr) -> result<void> override
+  {
+    parenthesize(fmt::format("Read {}", expr.m_name.lexeme));
+    return lox::ok();
+  }
+  virtual auto visit(Statement const& expr) -> result<void> override
+  {
+    parenthesize("Statement", *expr.m_expression);
+    return lox::ok();
+  }
+  virtual auto visit(Print const& expr) -> result<void> override
+  {
+    parenthesize("Print", *expr.m_value);
+    return lox::ok();
+  }
   virtual auto visit(Ternary const& expr) -> result<void> override
   {
     parenthesize("TERNARY", *expr.m_cond, *expr.m_left, *expr.m_right);

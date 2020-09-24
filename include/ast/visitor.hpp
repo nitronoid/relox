@@ -11,6 +11,10 @@ struct AstVisitor
 {
   virtual ~AstVisitor() = default;
 
+  virtual auto visit(Definition const&) -> result<void> = 0;
+  virtual auto visit(Read const&) -> result<void> = 0;
+  virtual auto visit(Statement const&) -> result<void> = 0;
+  virtual auto visit(Print const&) -> result<void> = 0;
   virtual auto visit(Ternary const&) -> result<void> = 0;
   virtual auto visit(Binary const&) -> result<void> = 0;
   virtual auto visit(Group const&) -> result<void> = 0;

@@ -26,6 +26,34 @@ struct ExpressionBase : public Expression
   }
 };
 
+struct Definition final : public ExpressionBase<Definition>
+{
+  Definition(Token name, std::unique_ptr<Expression> value)
+    : m_name(std::move(name)), m_value(std::move(value))
+  {
+  }
+  Token m_name;
+  std::unique_ptr<Expression> m_value;
+};
+
+struct Read final : public ExpressionBase<Read>
+{
+  Read(Token name) : m_name(std::move(name)) {}
+  Token m_name;
+};
+
+struct Statement final : public ExpressionBase<Statement>
+{
+  Statement(std::unique_ptr<Expression> expression) : m_expression(std::move(expression)) {}
+  std::unique_ptr<Expression> m_expression;
+};
+
+struct Print final : public ExpressionBase<Print>
+{
+  Print(std::unique_ptr<Expression> value) : m_value(std::move(value)) {}
+  std::unique_ptr<Expression> m_value;
+};
+
 struct Ternary final : public ExpressionBase<Ternary>
 {
   Ternary(std::unique_ptr<Expression> cond,
