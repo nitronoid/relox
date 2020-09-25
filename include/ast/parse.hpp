@@ -32,8 +32,11 @@ auto parse_print(gsl::span<Token> tokens) -> parse_result;
 /// expression -> block
 auto parse_expression(gsl::span<Token> tokens) -> parse_result;
 
-/// block -> ternary ("," ternary)*
+/// block -> assignment ("," assignment)*
 auto parse_block(gsl::span<Token> tokens) -> parse_result;
+
+/// assignment -> IDENTIFIER "=" assignment | ternary
+auto parse_assignment(gsl::span<Token> tokens) -> parse_result;
 
 /// ternary -> equality ("?" ternary ":" ternary)*
 auto parse_ternary(gsl::span<Token> tokens) -> parse_result;

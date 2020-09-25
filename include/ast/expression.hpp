@@ -13,6 +13,8 @@ struct Expression
 {
   virtual ~Expression() = default;
   virtual auto accept(AstVisitor& visitor) const -> result<void> = 0;
+  virtual auto is_lvalue() const -> std::optional<Token> = 0;
+  auto is_rvalue() const -> bool { return !is_lvalue(); }
 };
 
 template <typename T>
@@ -24,6 +26,7 @@ struct ExpressionBase : public Expression
   {
     return visitor.visit(static_cast<T const&>(*this));
   }
+  virtual auto is_lvalue() const -> std::optional<Token> override { return std::nullopt; }
 };
 
 struct Definition final : public ExpressionBase<Definition>
@@ -39,6 +42,8 @@ struct Definition final : public ExpressionBase<Definition>
 struct Read final : public ExpressionBase<Read>
 {
   Read(Token name) : m_name(std::move(name)) {}
+  virtual auto is_lvalue() const -> std::optional<Token> override { return m_name; }
+
   Token m_name;
 };
 
@@ -51,6 +56,16 @@ struct Statement final : public ExpressionBase<Statement>
 struct Print final : public ExpressionBase<Print>
 {
   Print(std::unique_ptr<Expression> value) : m_value(std::move(value)) {}
+  std::unique_ptr<Expression> m_value;
+};
+
+struct Assign final : public ExpressionBase<Assign>
+{
+  Assign(Token name, std::unique_ptr<Expression> value)
+    : m_name(std::move(name)), m_value(std::move(value))
+  {
+  }
+  Token m_name;
   std::unique_ptr<Expression> m_value;
 };
 

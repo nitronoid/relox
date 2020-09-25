@@ -137,7 +137,31 @@ auto parse_expression(gsl::span<Token> tokens) -> parse_result { return parse_bl
 
 auto parse_block(gsl::span<Token> tokens) -> parse_result
 {
-  return parse_recursive_binary<TOKEN_TYPE::COMMA>(tokens, parse_ternary);
+  return parse_recursive_binary<TOKEN_TYPE::COMMA>(tokens, parse_assignment);
+}
+
+auto parse_assignment(gsl::span<Token> tokens) -> parse_result
+{
+  auto tern = parse_ternary(tokens);
+  if (!tern.has_value()) return lox::error(tern.error());
+
+  std::unique_ptr<Expression> expr;
+  std::tie(expr, tokens) = std::move(*tern);
+
+  if (match<TOKEN_TYPE::ASSIGN>(tokens))
+  {
+    return parse_assignment(tokens.subspan(1)).and_then([&](auto&& value_tok) -> parse_result {
+      std::unique_ptr<Expression> value;
+      std::tie(value, tokens) = std::move(value_tok);
+      if (auto tok = expr->is_lvalue())
+      {
+        return std::make_tuple(std::make_unique<Assign>(*tok, std::move(value)), tokens);
+      }
+      return lox::error("Cannot assign to an rvalue.", tokens.data()[-1].line);
+    });
+  }
+
+  return std::make_pair(std::move(expr), tokens);
 }
 
 auto parse_ternary(gsl::span<Token> tokens) -> parse_result
@@ -160,7 +184,7 @@ auto parse_ternary(gsl::span<Token> tokens) -> parse_result
                       if (match<TOKEN_TYPE::COLON>(tokens))
                         return parse_ternary(tokens.subspan(1));
                       else
-                        return lox::error("Expected : in ternary expression.", tokens.data()[-1].line);
+                        return lox::error("Expected ':' in ternary expression.", tokens.data()[-1].line);
                     })
                     .map([&](auto&& rhs) { std::tie(right, tokens) = std::move(rhs); });
     if (!parsed.has_value()) return lox::error(parsed.error());

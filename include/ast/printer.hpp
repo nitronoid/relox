@@ -31,6 +31,11 @@ struct AstPrinter final : public AstVisitor
     parenthesize("Print", *expr.m_value);
     return lox::ok();
   }
+  virtual auto visit(Assign const& expr) -> result<void> override
+  {
+    parenthesize(fmt::format("Assign {}", expr.m_name.lexeme), *expr.m_value);
+    return lox::ok();
+  }
   virtual auto visit(Ternary const& expr) -> result<void> override
   {
     parenthesize("TERNARY", *expr.m_cond, *expr.m_left, *expr.m_right);

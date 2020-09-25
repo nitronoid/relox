@@ -11,4 +11,4 @@ print x + y + z;
 // Redefinition
 var b = true;
 print b == !!true == !false;
-
+print b = "hi";

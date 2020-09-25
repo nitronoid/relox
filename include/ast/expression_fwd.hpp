@@ -9,6 +9,7 @@ struct Definition;
 struct Read;
 struct Statement;
 struct Print;
+struct Assign;
 struct Ternary;
 struct Binary;
 struct Group;

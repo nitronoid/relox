@@ -13,7 +13,7 @@ namespace lox
 struct Key
 {
   std::string_view name;
-  constexpr bool operator==(Key const& rhs) const noexcept
+  constexpr auto operator==(Key const& rhs) const noexcept -> bool
   {
     return name == rhs.name;
   }
@@ -25,7 +25,7 @@ namespace std
 template<>
 struct hash<lox::Key>
 {
-  std::size_t operator()(lox::Key const& key) const
+  auto operator()(lox::Key const& key) const -> std::size_t
   {
     return std::hash<std::string_view>{}(key.name);
   }
@@ -43,12 +43,22 @@ struct Environment
   };
   std::unordered_map<Key, Value> values;
 
-  void update(Key key, Value value)
+  auto define(Key key, Value value) -> void
   {
     values[std::move(key)] = std::move(value);
   }
 
-  result<Value*> lookup(Key const& key)
+  auto assign(Key key, Value value) -> result<void>
+  {
+    if (!values.count(key))
+    {
+      return lox::error(fmt::format("Undefined variable '{}'.", key.name), ~0u);
+    }
+    define(std::move(key), std::move(value));
+    return lox::ok();
+  }
+
+  auto lookup(Key const& key) -> result<Value*>
   {
     auto const it = values.find(key);
     if (it == values.end())
