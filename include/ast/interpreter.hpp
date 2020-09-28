@@ -49,13 +49,13 @@ struct Interpreter final : public AstVisitor
   {
     if (auto value = expr.m_value->accept(*this); !value.has_value()) return value;
 
-    environment.define(Key{expr.m_name.lexeme}, Environment::Value{result});
+    environment.define(Key{std::string{expr.m_name.lexeme}}, Environment::Value{result});
     return lox::ok();
   }
 
   virtual auto visit(Read const& expr) -> result<void> override
   {
-    auto value = environment.lookup(Key{expr.m_name.lexeme});
+    auto value = environment.lookup(Key{std::string{expr.m_name.lexeme}});
     if (!value.has_value()) return lox::error(value.error());
     result = (*value)->value;
     return lox::ok();
@@ -87,7 +87,7 @@ struct Interpreter final : public AstVisitor
   virtual auto visit(Assign const& expr) -> result<void> override
   {
     if (auto value = expr.m_value->accept(*this); !value.has_value()) return value;
-    return environment.assign(Key{expr.m_name.lexeme}, Environment::Value{result});
+    return environment.assign(Key{std::string{expr.m_name.lexeme}}, Environment::Value{result});
   }
 
   virtual auto visit(Ternary const& expr) -> result<void> override

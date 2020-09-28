@@ -17,6 +17,13 @@ git_repository(
 )
 
 new_git_repository(
+    name = "structopt",
+    build_file = "//thirdparty:BUILD.structopt",
+    branch = "master",
+    remote = "https://github.com/p-ranav/structopt",
+)
+
+new_git_repository(
     name = "magic-enum",
     build_file = "//thirdparty:BUILD.magic-enum",
     branch = "master",

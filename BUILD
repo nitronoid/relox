@@ -18,6 +18,7 @@ cc_library(
         "@fmt//:fmt",
         "@tl-expected//:expected",
         "@magic-enum//:magic-enum",
+        "@structopt//:structopt",
     ],
     include_prefix = "lox",
     strip_include_prefix = "include",

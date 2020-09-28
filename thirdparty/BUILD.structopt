@@ -1,0 +1,11 @@
+cc_library(
+    name = "structopt",
+    hdrs = glob([
+        "include/**/*.hpp",
+    ]),
+    include_prefix = "structopt",
+    strip_include_prefix = "include/structopt",
+    visibility = [
+        "//visibility:public",
+    ],
+)

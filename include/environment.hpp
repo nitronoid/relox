@@ -12,8 +12,8 @@ namespace lox
 {
 struct Key
 {
-  std::string_view name;
-  constexpr auto operator==(Key const& rhs) const noexcept -> bool
+  std::string name;
+  auto operator==(Key const& rhs) const -> bool
   {
     return name == rhs.name;
   }
@@ -27,7 +27,7 @@ struct hash<lox::Key>
 {
   auto operator()(lox::Key const& key) const -> std::size_t
   {
-    return std::hash<std::string_view>{}(key.name);
+    return std::hash<std::string>{}(key.name);
   }
 };
 }
@@ -41,32 +41,38 @@ struct Environment
   {
     Token::literal value;
   };
-  std::unordered_map<Key, Value> values;
 
-  auto define(Key key, Value value) -> void
+  auto current_scope() -> std::unordered_map<Key, Value>&
   {
-    values[std::move(key)] = std::move(value);
-  }
-
-  auto assign(Key key, Value value) -> result<void>
-  {
-    if (!values.count(key))
-    {
-      return lox::error(fmt::format("Undefined variable '{}'.", key.name), ~0u);
-    }
-    define(std::move(key), std::move(value));
-    return lox::ok();
+    return scopes.back();
   }
 
   auto lookup(Key const& key) -> result<Value*>
   {
-    auto const it = values.find(key);
-    if (it == values.end())
+    // Reverse search through the scopes until the key is found
+    for (auto it = scopes.rbegin(); it != scopes.rend(); ++it)
     {
-      return lox::error(fmt::format("Undefined variable '{}'.", key.name), ~0u);
+      // If the scope has our key, return the associated value
+      if (auto val = it->find(key); val != it->end()) return &val->second;
     }
-    return &it->second;
+    return lox::error(fmt::format("Undefined variable '{}'.", key.name), ~0u);
   }
+
+  auto define(Key const& key, Value const& value) -> void
+  {
+    current_scope()[key] = value;
+  }
+
+  auto assign(Key const& key, Value const& value) -> result<void>
+  {
+    auto val = lookup(key);
+    if (!val) return lox::error(val.error());
+    **val = value;
+    return lox::ok();
+  }
+
+  // Default construct with a single scope
+  std::vector<std::unordered_map<Key, Value>> scopes{{}};
 };
 }
 
