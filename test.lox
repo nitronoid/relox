@@ -12,3 +12,42 @@ print x + y + z;
 var b = true;
 print b == !!true == !false;
 print b = "hi";
+
+// Multi assignment
+x = y = 2;
+print x;
+print y;
+
+{
+  var c = "hey";
+  print c;
+  print b;
+  // Should print bye using our shadowed var
+  var b = "bye";
+  print b;
+
+  // Assign to the enclosing scope
+  {
+    x = 10;
+  }
+}
+
+// Should print 'hi' as the shadowing variable has been popped
+print b;
+// Should print 10
+print x;
+
+
+var block = {
+  // Do some work
+  var x = 1;
+  var y = 3;
+  // Evaluate an expression as part of the block to be assigned
+  x + y
+};
+
+// Should print 4
+print block;
+
+// Should work
+{}

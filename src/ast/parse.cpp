@@ -104,49 +104,94 @@ auto parse_definition(gsl::span<Token> tokens) -> parse_result
 
 auto parse_statement(gsl::span<Token> tokens) -> parse_result
 {
-  if (match<TOKEN_TYPE::PRINT>(tokens)) return parse_print(tokens.subspan(1));
   std::unique_ptr<Expression> expr;
-  {
-    auto parsed = parse_expression(tokens);
-    if (!parsed.has_value()) return parsed;
-    std::tie(expr, tokens) = std::move(*parsed);
-  }
-  if (!match<TOKEN_TYPE::SEMICOLON>(tokens))
+  auto const& token = tokens[0];
+  auto parsed = [&]() -> parse_result {
+    switch (token.type)
+    {
+    case TOKEN_TYPE::LEFT_BRACE: return parse_block(tokens);
+    case TOKEN_TYPE::PRINT: return parse_print(tokens);
+    default: return parse_expression(tokens);
+    }
+  }();
+  if (!parsed.has_value()) return parsed;
+  std::tie(expr, tokens) = std::move(*parsed);
+  bool const is_block = token.type != TOKEN_TYPE::LEFT_BRACE;
+  if (is_block && !match<TOKEN_TYPE::SEMICOLON>(tokens))
   {
     return lox::error("Expected ';' after expression.", tokens.data()[-1].line);
   }
-  return std::make_tuple(std::make_unique<Statement>(std::move(expr)), tokens.subspan(1));
+  return std::make_tuple(std::make_unique<Statement>(std::move(expr)), tokens.subspan(is_block));
+}
+
+auto parse_block(gsl::span<Token> tokens) -> parse_result
+{
+  if (!match<TOKEN_TYPE::LEFT_BRACE>(tokens))
+  {
+    return lox::error("Expected '{' token", tokens.data()[-1].line);
+  }
+  tokens = tokens.subspan(1);
+
+  std::vector<std::unique_ptr<Expression>> exprs;
+
+  while (tokens.size() && !match<TOKEN_TYPE::RIGHT_BRACE>(tokens))
+  {
+    exprs.emplace_back();
+    // Attempt to parse a declaration
+    auto parsed = parse_declaration(tokens);
+    // If we failed, try to parse an expression, but this must be the final part of our block
+    if (!parsed.has_value())
+    {
+      parsed = parse_expression(tokens);
+      if (!parsed.has_value()) return parsed;
+      std::tie(exprs.back(), tokens) = std::move(*parsed);
+      break;
+    }
+    std::tie(exprs.back(), tokens) = std::move(*parsed);
+  }
+
+  if (!match<TOKEN_TYPE::RIGHT_BRACE>(tokens))
+  {
+    return lox::error("Expected '}' token", tokens.data()[-1].line);
+  }
+
+  return std::make_pair(std::make_unique<Block>(std::move(exprs)), tokens.subspan(1));
 }
 
 auto parse_print(gsl::span<Token> tokens) -> parse_result
 {
+  if (!match<TOKEN_TYPE::PRINT>(tokens))
+  {
+    return lox::error("Expected 'print' token", tokens.data()[-1].line);
+  }
+  tokens = tokens.subspan(1);
   std::unique_ptr<Expression> expr;
   {
     auto parsed = parse_expression(tokens);
     if (!parsed.has_value()) return parsed;
     std::tie(expr, tokens) = std::move(*parsed);
   }
-  if (!match<TOKEN_TYPE::SEMICOLON>(tokens))
-  {
-    return lox::error("Expected ';' after value.", tokens[0].line);
-  }
-  return std::make_tuple(std::make_unique<Print>(std::move(expr)), tokens.subspan(1));
+  return std::make_tuple(std::make_unique<Print>(std::move(expr)), tokens);
 }
 
-auto parse_expression(gsl::span<Token> tokens) -> parse_result { return parse_block(tokens); }
+auto parse_expression(gsl::span<Token> tokens) -> parse_result { return parse_list(tokens); }
 
-auto parse_block(gsl::span<Token> tokens) -> parse_result
+auto parse_list(gsl::span<Token> tokens) -> parse_result
 {
   return parse_recursive_binary<TOKEN_TYPE::COMMA>(tokens, parse_assignment);
 }
 
 auto parse_assignment(gsl::span<Token> tokens) -> parse_result
 {
-  auto tern = parse_ternary(tokens);
-  if (!tern.has_value()) return lox::error(tern.error());
+  auto lval = parse_ternary(tokens);
+  if (!lval.has_value())
+  {
+    lval = parse_block(tokens);
+    if (!lval.has_value()) return lox::error(lval.error());
+  }
 
   std::unique_ptr<Expression> expr;
-  std::tie(expr, tokens) = std::move(*tern);
+  std::tie(expr, tokens) = std::move(*lval);
 
   if (match<TOKEN_TYPE::ASSIGN>(tokens))
   {

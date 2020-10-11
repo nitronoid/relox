@@ -71,7 +71,11 @@ struct Environment
     return lox::ok();
   }
 
-  // Default construct with a single scope
+  auto push_scope() -> void { scopes.emplace_back(); }
+
+  auto pop_scope() -> void { if (!scopes.empty()) scopes.pop_back(); }
+
+  // Stack of scopes, default construct with a single scope
   std::vector<std::unordered_map<Key, Value>> scopes{{}};
 };
 }

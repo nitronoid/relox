@@ -53,6 +53,13 @@ struct Statement final : public ExpressionBase<Statement>
   std::unique_ptr<Expression> m_expression;
 };
 
+struct Block final : public ExpressionBase<Block>
+{
+  Block(std::vector<std::unique_ptr<Expression>>&& expressions) : m_expressions(std::move(expressions))
+  {}
+  std::vector<std::unique_ptr<Expression>> m_expressions;
+};
+
 struct Print final : public ExpressionBase<Print>
 {
   Print(std::unique_ptr<Expression> value) : m_value(std::move(value)) {}

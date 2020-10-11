@@ -17,25 +17,28 @@ using parse_result = result<std::tuple<std::unique_ptr<Expression>, gsl::span<To
 /// Parse a list of tokens to produce a list of instructions
 auto parse(gsl::span<Token> tokens) -> parse_list_result;
 
-/// definition -> definition | statement
+/// declaration -> definition | statement
 auto parse_declaration(gsl::span<Token> tokens) -> parse_result;
 
 /// definition -> "var" IDENTIFIER ("=" expression)? ";"
 auto parse_definition(gsl::span<Token> tokens) -> parse_result;
 
-/// statement -> expression | print ";"
+/// statement -> ((expression | print) ";") | block
 auto parse_statement(gsl::span<Token> tokens) -> parse_result;
+
+/// block -> "{" declaration* expression? "}"
+auto parse_block(gsl::span<Token> tokens) -> parse_result;
 
 /// print -> "print" expression ";"
 auto parse_print(gsl::span<Token> tokens) -> parse_result;
 
-/// expression -> block
+/// expression -> list
 auto parse_expression(gsl::span<Token> tokens) -> parse_result;
 
-/// block -> assignment ("," assignment)*
-auto parse_block(gsl::span<Token> tokens) -> parse_result;
+/// list -> assignment ("," assignment)*
+auto parse_list(gsl::span<Token> tokens) -> parse_result;
 
-/// assignment -> IDENTIFIER "=" assignment | ternary
+/// assignment -> IDENTIFIER "=" assignment | ternary | block
 auto parse_assignment(gsl::span<Token> tokens) -> parse_result;
 
 /// ternary -> equality ("?" ternary ":" ternary)*

@@ -8,6 +8,7 @@ namespace lox
 struct Definition;
 struct Read;
 struct Statement;
+struct Block;
 struct Print;
 struct Assign;
 struct Ternary;

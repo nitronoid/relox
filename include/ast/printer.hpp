@@ -26,6 +26,17 @@ struct AstPrinter final : public AstVisitor
     parenthesize("Statement", *expr.m_expression);
     return lox::ok();
   }
+  virtual auto visit(Block const& expr) -> result<void> override
+  {
+    m_ast += "(Block";
+    for (auto const& e : expr.m_expressions)
+    {
+        m_ast += " ";
+        e->accept(*this);
+    }
+    m_ast += ")";
+    return lox::ok();
+  }
   virtual auto visit(Print const& expr) -> result<void> override
   {
     parenthesize("Print", *expr.m_value);

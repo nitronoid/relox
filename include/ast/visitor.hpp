@@ -14,6 +14,7 @@ struct AstVisitor
   virtual auto visit(Definition const&) -> result<void> = 0;
   virtual auto visit(Read const&) -> result<void> = 0;
   virtual auto visit(Statement const&) -> result<void> = 0;
+  virtual auto visit(Block const&) -> result<void> = 0;
   virtual auto visit(Print const&) -> result<void> = 0;
   virtual auto visit(Assign const&) -> result<void> = 0;
   virtual auto visit(Ternary const&) -> result<void> = 0;

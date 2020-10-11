@@ -72,6 +72,17 @@ struct Interpreter final : public AstVisitor
     return lox::ok();
   }
 
+  virtual auto visit(Block const& stmt) -> result<void> override
+  {
+    // Create a new scope for this block
+    environment.push_scope();
+    // Execute all the expressions
+    for (auto const& expr : stmt.m_expressions) expr->accept(*this);
+    // Pop our scope
+    environment.pop_scope();
+    return lox::ok();
+  }
+
   virtual auto visit(Print const& stmt) -> result<void> override
   {
     // Evaluate the condition
